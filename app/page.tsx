@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 const PLANS = {
@@ -223,8 +224,8 @@ export default function Home() {
           <a href="#community" className={styles.navLink}>
             <span className={styles.globeIcon}>🌐</span> Community
           </a>
-          <a href="#signin" className={styles.navLink}>Sign in</a>
-          <a href="#start" className={styles.navCta}>Get Started</a>
+          <Link href="/signin" className={styles.navLink}>Sign in</Link>
+          <Link href="/signup" className={styles.navCta}>Get Started</Link>
         </div>
       </nav>
 
@@ -242,9 +243,9 @@ export default function Home() {
             founders.
           </p>
           <div className={styles.heroActions}>
-            <a href="#start" className={styles.btnPrimary}>
+            <Link href="/signup" className={styles.btnPrimary}>
               Start Free &nbsp;→
-            </a>
+            </Link>
             <p className={styles.heroNote}>8 credits, no card required</p>
           </div>
           <a href="#gallery" className={styles.heroGalleryLink}>
@@ -460,12 +461,12 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a
-                href="#start"
+              <Link
+                href="/signup"
                 className={plan.highlighted ? styles.btnPrimary : styles.btnOutline}
               >
                 {plan.cta}
-              </a>
+              </Link>
             </div>
           ))}
         </div>
