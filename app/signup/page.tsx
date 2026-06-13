@@ -1,14 +1,27 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  updateProfile,
+} from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase";
 import Nav from "../components/Nav";
 import styles from "./page.module.css";
 
+const googleProvider = new GoogleAuthProvider();
+
 export default function SignUp() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -23,8 +36,28 @@ export default function SignUp() {
       return;
     }
     setLoading(true);
-    // auth logic goes here
-    setTimeout(() => setLoading(false), 1200);
+    try {
+      const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+      await updateProfile(credential.user, { displayName: name });
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(friendlyError(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogle() {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      await signInWithPopup(getFirebaseAuth(), googleProvider);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(friendlyError(err));
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   return (
@@ -34,9 +67,22 @@ export default function SignUp() {
         <div className={styles.card}>
           <div className={styles.header}>
             <h1 className={styles.title}>Start for free</h1>
-            <p className={styles.subtitle}>
-              8 credits on us. No card required.
-            </p>
+            <p className={styles.subtitle}>8 credits on us. No card required.</p>
+          </div>
+
+          <button
+            className={styles.socialBtn}
+            onClick={handleGoogle}
+            disabled={googleLoading}
+          >
+            <GoogleIcon />
+            {googleLoading ? "Signing in…" : "Continue with Google"}
+          </button>
+
+          <div className={styles.divider}>
+            <span className={styles.dividerLine} />
+            <span className={styles.dividerText}>or</span>
+            <span className={styles.dividerLine} />
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -48,7 +94,7 @@ export default function SignUp() {
                 id="name"
                 className={styles.input}
                 type="text"
-                placeholder="Danielle Malingue"
+                placeholder="Your name"
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -81,27 +127,10 @@ export default function SignUp() {
               />
             </div>
 
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={loading}
-            >
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
               {loading ? "Creating account…" : "Create account →"}
             </button>
           </form>
-
-          <div className={styles.divider}>
-            <span className={styles.dividerLine} />
-            <span className={styles.dividerText}>or</span>
-            <span className={styles.dividerLine} />
-          </div>
-
-          <div className={styles.socialBtns}>
-            <button className={styles.socialBtn}>
-              <GoogleIcon />
-              Continue with Google
-            </button>
-          </div>
 
           <p className={styles.switchText}>
             Already have an account?{" "}
@@ -142,6 +171,18 @@ export default function SignUp() {
       </main>
     </>
   );
+}
+
+function friendlyError(err: unknown): string {
+  if (typeof err === "object" && err !== null && "code" in err) {
+    const code = (err as { code: string }).code;
+    if (code === "auth/email-already-in-use") return "An account with this email already exists.";
+    if (code === "auth/invalid-email") return "Please enter a valid email.";
+    if (code === "auth/weak-password") return "Password must be at least 6 characters.";
+    if (code === "auth/too-many-requests") return "Too many attempts. Try again later.";
+    if (code === "auth/popup-closed-by-user") return "";
+  }
+  return "Something went wrong. Please try again.";
 }
 
 function GoogleIcon() {

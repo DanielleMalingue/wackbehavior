@@ -72,6 +72,11 @@
   font-size: 12px;
   color: #888;
   text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
 }
 
 .forgotLink:hover { color: #0a0a0a; }
@@ -112,6 +117,63 @@
 .submitBtn:hover:not(:disabled) { background: #c42d23; }
 
 .submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.success {
+  background: #f0faf4;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1a7f37;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e8e8e8;
+}
+
+.dividerText {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.socialBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 4px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.socialBtn:hover:not(:disabled) {
+  border-color: #aaa;
+  background: #fafafa;
+}
+
+.socialBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
