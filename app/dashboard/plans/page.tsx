@@ -2,10 +2,25 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
+import { getFirebaseDb } from "@/lib/firestore";
+import {
+  checkoutSubscription,
+  checkoutTopup,
+  openBillingPortal,
+} from "@/lib/billing-client";
+import type { PlanId } from "@/lib/plans";
 import DashNav from "../../components/DashNav";
 import Footer from "../../components/Footer";
 import styles from "./page.module.css";
+
+type Account = {
+  plan?: string;
+  billing?: string;
+  subscriptionStatus?: string;
+  credits?: number;
+};
 
 type Plan = {
   name: string;
@@ -86,10 +101,33 @@ export default function Plans() {
   const [tab, setTab] = useState<"plans" | "topups">("plans");
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.push("/signin");
   }, [user, loading, router]);
+
+  // Live-read the user's billing/credit state from Firestore.
+  useEffect(() => {
+    if (!user) return;
+    const unsub = onSnapshot(
+      doc(getFirebaseDb(), "users", user.uid),
+      (snap) => setAccount((snap.data() as Account) ?? {}),
+      () => setAccount({}),
+    );
+    return () => unsub();
+  }, [user]);
+
+  // Surface the result of returning from Stripe Checkout.
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("status");
+    if (status === "success") {
+      setNotice("Payment successful — your credits will update momentarily.");
+    } else if (status === "cancelled") {
+      setNotice("Checkout cancelled. No charge was made.");
+    }
+  }, []);
 
   if (loading || !user) {
     return (
@@ -99,9 +137,43 @@ export default function Plans() {
     );
   }
 
-  function checkout(label: string) {
-    setNotice(`Checkout for "${label}" isn't connected to a payment processor yet.`);
+  async function handleSubscribe(plan: PlanId) {
+    setNotice("");
+    setBusy(`plan:${plan}`);
+    try {
+      await checkoutSubscription(plan, billing);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not start checkout.");
+      setBusy(null);
+    }
   }
+
+  async function handleTopup(topupId: string) {
+    setNotice("");
+    setBusy(`topup:${topupId}`);
+    try {
+      await checkoutTopup(topupId);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not start checkout.");
+      setBusy(null);
+    }
+  }
+
+  async function handlePortal() {
+    setNotice("");
+    setBusy("portal");
+    try {
+      await openBillingPortal();
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not open billing portal.");
+      setBusy(null);
+    }
+  }
+
+  const hasSubscription =
+    account?.subscriptionStatus === "active" ||
+    account?.subscriptionStatus === "trialing" ||
+    account?.subscriptionStatus === "past_due";
 
   return (
     <div className={styles.page}>
@@ -130,20 +202,45 @@ export default function Plans() {
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>Current Plan</span>
             <span className={styles.summaryValue}>
-              Wackbehavior Trial <span className={styles.tagTrial}>TRIAL</span>
+              {hasSubscription && account?.plan && account.plan !== "trial" ? (
+                <>
+                  Wackbehavior{" "}
+                  {account.plan.charAt(0).toUpperCase() + account.plan.slice(1)}
+                </>
+              ) : (
+                <>
+                  Wackbehavior Trial <span className={styles.tagTrial}>TRIAL</span>
+                </>
+              )}
             </span>
           </div>
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>Available</span>
-            <span className={styles.summaryBig}>8</span>
+            <span className={styles.summaryBig}>{account?.credits ?? 8}</span>
           </div>
           <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Used</span>
-            <span className={styles.summaryBig}>0</span>
+            <span className={styles.summaryLabel}>Billing</span>
+            <span className={styles.summaryValue}>
+              {account?.billing
+                ? account.billing.charAt(0).toUpperCase() + account.billing.slice(1)
+                : "—"}
+            </span>
           </div>
           <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Next Billing</span>
-            <span className={styles.summaryBig}>—</span>
+            {hasSubscription ? (
+              <button
+                className={styles.upgradeOutline}
+                onClick={handlePortal}
+                disabled={busy === "portal"}
+              >
+                {busy === "portal" ? "Opening…" : "Manage subscription"}
+              </button>
+            ) : (
+              <>
+                <span className={styles.summaryLabel}>Status</span>
+                <span className={styles.summaryBig}>—</span>
+              </>
+            )}
           </div>
         </div>
         <div className={styles.summaryRule} />
@@ -216,9 +313,12 @@ export default function Plans() {
                     </ul>
                     <button
                       className={plan.highlighted ? styles.upgradeFilled : styles.upgradeOutline}
-                      onClick={() => checkout(`${plan.name} (${billing})`)}
+                      onClick={() => handleSubscribe(plan.name.toLowerCase() as PlanId)}
+                      disabled={busy === `plan:${plan.name.toLowerCase()}`}
                     >
-                      ↑ Upgrade
+                      {busy === `plan:${plan.name.toLowerCase()}`
+                        ? "Redirecting…"
+                        : "↑ Upgrade"}
                     </button>
                   </div>
                 );
@@ -247,9 +347,10 @@ export default function Plans() {
                   <p className={styles.topupPer}>${t.per} per credit</p>
                   <button
                     className={styles.buyBtn}
-                    onClick={() => checkout(`${t.credits} credit pack`)}
+                    onClick={() => handleTopup(String(t.credits))}
+                    disabled={busy === `topup:${t.credits}`}
                   >
-                    Buy
+                    {busy === `topup:${t.credits}` ? "Redirecting…" : "Buy"}
                   </button>
                 </div>
               ))}

@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:stripe": "node --env-file=.env.local scripts/setup-stripe.mjs"
   },
   "dependencies": {
     "firebase": "^12.14.0",
+    "firebase-admin": "^14.0.0",
     "next": "^15.3.9",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "stripe": "^22.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
