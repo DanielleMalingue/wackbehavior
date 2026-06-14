@@ -10,6 +10,7 @@ const FABRICS = [
   "Linen",
   "Silk",
   "Satin",
+  "Crepe",
   "Denim",
   "Wool",
   "Knit / Jersey",
@@ -26,8 +27,33 @@ const FITS = [
   "Tailored",
   "Relaxed",
   "Bodycon",
+  "Cropped",
   "A-line",
   "Straight",
+];
+
+const EXAMPLES = [
+  {
+    color: "Butter Yellow",
+    fabric: "Linen",
+    fit: "Cropped",
+    details:
+      "Halter neckline with adjustable buckle strap, open back with thin cross ties, fitted cropped bodice with princess seams for shaping, paired with high-rise wide-leg pants featuring a fold-over waistband, side invisible zipper closure, and relaxed drape through the leg.",
+  },
+  {
+    color: "Black",
+    fabric: "Satin",
+    fit: "Bodycon",
+    details:
+      "Strapless structured evening gown with a fitted corset bodice, subtle boning for support, sweetheart neckline with a gentle dip, smooth princess seam construction through the torso, high waist seam transitioning into a floor-length fitted skirt with a dramatic thigh-high front slit, invisible back zipper closure, and a small fishtail sweep at the hem.",
+  },
+  {
+    color: "Ivory",
+    fabric: "Crepe",
+    fit: "Tailored",
+    details:
+      "Deep V wrap blouse with full-length bishop sleeves gathered into buttoned cuffs, self-fabric waist tie with side closure, darted bust for a clean fit, paired with wide-leg high-waisted trousers featuring front pressed creases, hook-and-bar waistband closure, slant front pockets, and a full-length relaxed drape through the leg.",
+  },
 ];
 
 const PLACEHOLDER =
@@ -57,6 +83,15 @@ export default function CreateDesign() {
 
   const wordCount = details.trim() ? details.trim().split(/\s+/).length : 0;
   const canGenerate = color.trim() && fabric && fit && details.trim().length > 0;
+
+  function useExample(ex: (typeof EXAMPLES)[number]) {
+    setColor(ex.color);
+    setFabric(ex.fabric);
+    setFit(ex.fit);
+    setDetails(ex.details);
+    setNotice("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function handleGenerate() {
     if (!canGenerate) return;
@@ -171,6 +206,25 @@ export default function CreateDesign() {
           >
             Generate Sketch · 1 credit
           </button>
+        </div>
+
+        <div className={styles.examples}>
+          <div className={styles.examplesHead}>
+            <span className={styles.examplesLabel}>Example Combinations</span>
+            <span className={styles.examplesHint}>Tap to use this example</span>
+          </div>
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex.color}
+              className={styles.exampleItem}
+              onClick={() => useExample(ex)}
+            >
+              <span className={styles.exampleTitle}>
+                {ex.color} · {ex.fabric} · {ex.fit}
+              </span>
+              <span className={styles.exampleDesc}>{ex.details}</span>
+            </button>
+          ))}
         </div>
       </main>
     </div>
