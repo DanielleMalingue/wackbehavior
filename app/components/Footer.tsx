@@ -14,7 +14,7 @@ export default function Footer() {
         </div>
         <div className={styles.col}>
           <p className={styles.colTitle}>Product</p>
-          <Link href="/dashboard/plans" className={styles.link}>Pricing</Link>
+          <Link href="/pricing" className={styles.link}>Pricing</Link>
           <a href="/#community" className={styles.link}>Community</a>
         </div>
         <div className={styles.col}>

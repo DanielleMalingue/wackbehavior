@@ -9,6 +9,7 @@ export default function Nav() {
         <span className={styles.logoText}>WACKBEHAVIOR</span>
       </Link>
       <div className={styles.right}>
+        <Link href="/pricing" className={styles.link}>Pricing</Link>
         <Link href="/signin" className={styles.link}>Sign in</Link>
         <Link href="/signup" className={styles.cta}>Get Started</Link>
       </div>
