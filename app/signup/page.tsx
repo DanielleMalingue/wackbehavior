@@ -181,6 +181,14 @@ function friendlyError(err: unknown): string {
     if (code === "auth/weak-password") return "Password must be at least 6 characters.";
     if (code === "auth/too-many-requests") return "Too many attempts. Try again later.";
     if (code === "auth/popup-closed-by-user") return "";
+    if (code === "auth/cancelled-popup-request") return "";
+    if (code === "auth/popup-blocked")
+      return "Your browser blocked the sign-in popup. Allow popups for this site and try again.";
+    if (code === "auth/unauthorized-domain")
+      return "This domain isn't authorized for Google sign-in. Add it under Firebase Authentication → Settings → Authorized domains.";
+    if (code === "auth/operation-not-allowed")
+      return "Google sign-in isn't enabled. Enable it in Firebase Authentication → Sign-in method.";
+    return `Sign-in failed (${code}). Please try again.`;
   }
   return "Something went wrong. Please try again.";
 }
