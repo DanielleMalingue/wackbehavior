@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "../context/AuthContext";
+import Onboarding from "../components/Onboarding";
 import styles from "./page.module.css";
 
 export default function Dashboard() {
@@ -34,6 +35,10 @@ export default function Dashboard() {
 
   return (
     <div className={styles.page}>
+      <Onboarding
+        userId={user.uid}
+        onGenerateSketch={() => router.push("/dashboard/create")}
+      />
       <nav className={styles.nav}>
         <span className={styles.logo}>WACKBEHAVIOR</span>
         <div className={styles.navRight}>
@@ -101,6 +106,7 @@ export default function Dashboard() {
               <button
                 className={tool.available ? styles.toolCta : styles.toolCtaDisabled}
                 disabled={!tool.available}
+                onClick={() => tool.available && router.push("/dashboard/create")}
               >
                 {tool.cta}
               </button>
